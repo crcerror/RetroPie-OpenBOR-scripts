@@ -44,15 +44,21 @@ fi
 
 # 2.Check config files
 BOR_cfg="$KEYCONF_DIR/${BOR_file#.*}.cfg"
-if [[ ! -f $BOR_cfg && -f $BORBASE_DIR/master.bor.cfg  ]]; then
+if [[ ! -f $BOR_cfg && -f $BORBASE_DIR/master.bor.cfg ]]; then
     cp "$BORBASE_DIR/master.bor.cfg" "$BOR_cfg"
     show_msg "Copied config-file from:\n\"$BORBASE_DIR/master.bor.cfg\"\n    to:\n\"$BOR_cfg\"\n\nStarting game \"${BOR_file:0:-4}\" in a few seconds!" "8" " Setting up ... "
-elif [[ ! -f $BORBASE_DIR/master.bor.cfg ]]; then
-    show_msg "Config-file: \"$BORBASE_DIR/master.bor.cfg\" not found!\n\nNothing done! Terminating .... " "3" " Error! "
+elif [[ ! -f $BORBASE_DIR/master.bor.cfg && -f $BOR_cfg ]]; then
+    show_yesno "Config-file \"$BORBASE_DIR/master.bor.cfg\" not found!\n\nBut I detected a config from game \"${BOR_file:0:-4}\"\n\nShould I set this config as new master file?" " Create new master file "
+    [[ $? == 0 ]] && cp "$BOR_cfg" "$BORBASE_DIR/master.bor.cfg"
     exit 0
-elif [[ -f $BOR_cfg ]]; then
+elif [[ ! -f $BORBASE_DIR/master.bor.cfg && ! -f $BOR_cfg  ]]; then
+    show_msg "Config-file: \"$BORBASE_DIR/master.bor.cfg\"\n    and\n\"$BOR_cfg\"\nnot found!\n\nNothing done! Terminating .... " "3" " Error! "
+    exit 0
+elif [[ -f $BOR_cfg && -f $BORBASE_DIR/master.bor.cfg ]]; then
     show_yesno "Config-file \"$BOR_cfg\" found!\n\nDelete this? In all means I will go back to runcommand!" " Delete config file! "
     [[ $? == 0 ]] && rm -f "$BOR_cfg"
+    show_yesno "Master-file \"$BORBASE_DIR/master.bor.cfg\" found!\n\nDelete this? In all means I will go back to runcommand!" " Delete MASTER file! "
+    [[ $? == 0 ]] && rm -f "$BORBASE_DIR/master.bor.cfg"
     exit 0
 else
     show_msg "Fatal error!\nThis should never happen!" " Fatal error! " "10"
