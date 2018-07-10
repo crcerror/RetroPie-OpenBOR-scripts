@@ -43,25 +43,22 @@ if [[ "$emulator" != "openbor" ]]; then
 fi
 
 # 2.Check config files
-BOR_cfg="$KEYCONF_DIR/${BOR_file#.*}.cfg"
+BOR_cfg="$KEYCONF_DIR/$BOR_file.cfg"
 if [[ ! -f $BOR_cfg && -f $BORBASE_DIR/master.bor.cfg ]]; then
     cp "$BORBASE_DIR/master.bor.cfg" "$BOR_cfg"
     show_msg "Copied config-file from:\n\"$BORBASE_DIR/master.bor.cfg\"\n    to:\n\"$BOR_cfg\"\n\nStarting game \"${BOR_file:0:-4}\" in a few seconds!" "8" " Setting up ... "
 elif [[ ! -f $BORBASE_DIR/master.bor.cfg && -f $BOR_cfg ]]; then
-    show_yesno "Config-file \"$BORBASE_DIR/master.bor.cfg\" not found!\n\nBut I detected a config from game \"${BOR_file:0:-4}\"\n\nShould I set this config as new master file?" " Create new master file "
+    show_yesno "Setting up: \"${BOR_file:0:-4}\"\n\nConfig-file \"$BORBASE_DIR/master.bor.cfg\" not found!\n\nBut I detected a config from game \"${BOR_file:0:-4}\"\n\nShould I set this config as new master file?" " Create new master file! "
     [[ $? == 0 ]] && cp "$BOR_cfg" "$BORBASE_DIR/master.bor.cfg"
     exit 0
 elif [[ ! -f $BORBASE_DIR/master.bor.cfg && ! -f $BOR_cfg  ]]; then
-    show_msg "Config-file: \"$BORBASE_DIR/master.bor.cfg\"\n    and\n\"$BOR_cfg\"\nnot found!\n\nNothing done! Terminating .... " "3" " Error! "
+    show_msg "Setting up: \"${BOR_file:0:-4}\"\n\nDid not found the master-file nor the game config-file:\n\"$BORBASE_DIR/master.bor.cfg\"\n    and\n\"$BOR_cfg\"\n\nNothing done! Terminating .... " "7" " Error! "
     exit 0
 elif [[ -f $BOR_cfg && -f $BORBASE_DIR/master.bor.cfg ]]; then
-    show_yesno "Config-file \"$BOR_cfg\" found!\n\nDelete this? In all means I will go back to runcommand!" " Delete config file! "
+    show_yesno "Setting up: \"${BOR_file:0:-4}\"\n\nFound Config-file:\n\"$BOR_cfg\"\n\nDelete this? Next window will ask you to delete MASTER file!!" " Delete config file! "
     [[ $? == 0 ]] && rm -f "$BOR_cfg"
-    show_yesno "Master-file \"$BORBASE_DIR/master.bor.cfg\" found!\n\nDelete this? In all means I will go back to runcommand!" " Delete MASTER file! "
+    show_yesno "Setting up: \"${BOR_file:0:-4}\"\n\nFound Master-file:\n\"$BORBASE_DIR/master.bor.cfg\"\n\nDelete this? In all means I will go back to runcommand!" " Delete MASTER file! "
     [[ $? == 0 ]] && rm -f "$BORBASE_DIR/master.bor.cfg"
-    exit 0
-else
-    show_msg "Fatal error!\nThis should never happen!" " Fatal error! " "10"
     exit 0
 fi
 
