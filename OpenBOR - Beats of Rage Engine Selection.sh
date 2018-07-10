@@ -21,7 +21,7 @@
 # For https://retropie.org.uk/
 
 ###### --------------------- INIT ---------------------
-readonly VERSION="0.99_070218"
+readonly VERSION="1.01_071018"
 readonly TITLE="OpenBOR - cyperghosts Episode selector"
 readonly BORBASE_DIR="/home/pi/RetroPie/roms/ports/openbor"
 readonly ROOTDIR="/opt/retropie"
@@ -36,11 +36,16 @@ readonly KEYCONF_DIR="$ROOTDIR/configs/ports/openbor/Saves"
 function start_joy(){
 
    ### >>>> RIPPED OUT OF RUNCOMMAND.SH ---- Please improve!
+   ### >>>> Added support for multiple Joypads now!
 
         # call joy2key.py: arguments are curses capability names or hex values starting with '0x'
         # see: http://pubs.opengroup.org/onlinepubs/7908799/xcurses/terminfo.html
-        "$ROOTDIR/supplementary/runcommand/joy2key.py" "/dev/input/js0" kcub1 kcuf1 kcuu1 kcud1 0x0a 0x09 &
-        JOY2KEY_PID=$!
+        local joy_find; local i
+        joy_find=$(find /dev/input/js?)
+        for i in ${joy_find[@]}; do
+            "$ROOTDIR/supplementary/runcommand/joy2key.py" "$i" kcub1 kcuf1 kcuu1 kcud1 0x0a 0x09 &
+            JOY2KEY_PID+=("$!")
+        done
 }
 
 function end_joy(){
@@ -49,7 +54,7 @@ function end_joy(){
 
 
     if [[ -n "$JOY2KEY_PID" ]]; then
-        kill -INT "$JOY2KEY_PID"
+        kill -INT "${JOY2KEY_PID[@]}"
     fi
 
 }
@@ -59,9 +64,9 @@ function end_joy(){
 # Show Infobox // $1 = Textmessage, $2 = seconds box will appear, $3 = Boxtitlemessage
 
 function show_msg() {
-    dialog --title " $3 " --backtitle " $TITLE - $VERSION " --infobox "$1" 0 0
+    dialog --title "$3" --backtitle " $TITLE - $VERSION " --infobox "$1" 0 0
     sleep "$2"; clear
-	}
+}
 
 # This builds dialog for OpenBOR directories
 # We need to create valid array (dialog_array) before
@@ -80,7 +85,7 @@ function dialog_selectBOR() {
     unset array
 
     # -- Begin Dialog
-    local cmd=(dialog --backtitle "$TITLE - $VERSION " \
+    local cmd=(dialog --backtitle " $TITLE - $VERSION " \
                       --title " Select your Beats of Rage Episode " \
                       --ok-label " Select " \
                       --cancel-label " Exit to ES " \
@@ -115,7 +120,8 @@ function build_find_array() {
             ii="$ii $i"
          fi
     done
-    array[0]="$ii"
+    array+=("$ii")
+    unset array[0]
 
 }
 
@@ -130,30 +136,29 @@ function build_find_array() {
 
 if [[ -d $BORBASE_DIR ]]; then
     cd "$BORBASE_DIR"
-    bor_files=$(find -maxdepth 1 -iname "*.bor" -type d 2>/dev/null)
+    bor_files=$(find -maxdepth 1 -iname "*.bor" -type d | sort 2>/dev/null)
 else
-    show_msg "No $BORBASE_DIR found!" "3" "Fatal error!"
+    show_msg "No $BORBASE_DIR found!" "3" " Fatal error! "
     exit
 fi
 
 # Are there any BOR Directories available?
 
 if [[ -z $bor_files ]]; then
-    show_msg "No BOR directories found in location:\n\n$BORBASE_DIR" "3" "Error!"
+    show_msg "No BOR directories found in location:\n\n$BORBASE_DIR" "3" " Error! "
     exit
 fi
 
 # Start Selection Dialog
 
 start_joy
-
 build_find_array "$bor_files"
 BOR_file=$("dialog_selectBOR")
 clear
 end_joy; sleep 0.5
 
 if [[ -z $BOR_file ]]; then
-    show_msg "No Selection made...Returning to ES!" "2" "Really? :("
+    show_msg "No Selection made...Returning to ES!" "2" " Really? :( "
     exit
 fi
 
@@ -164,7 +169,7 @@ fi
 BOR_cfg="$KEYCONF_DIR${BOR_file#.*}.cfg"
 if [[ ! -f $BOR_cfg && -f $BORBASE_DIR/master.bor.cfg  ]]; then
     cp "$BORBASE_DIR/master.bor.cfg" "$BOR_cfg"
-    show_msg "Copied config-file from:\n$BORBASE_DIR/master.bor.cfg\n    to:\n$BOR_cfg\n\nStarting game ${BOR_file:2:-4} in a few seconds!" "8" "Setup"
+    show_msg "Copied config-file from:\n$BORBASE_DIR/master.bor.cfg\n    to:\n$BOR_cfg\n\nStarting game \"${BOR_file:2:-4}\" in a few seconds!" "8" " Setup controller! "
 fi
 
 # Finally using RUNCOMMAND.SH to initiate prober start of games
