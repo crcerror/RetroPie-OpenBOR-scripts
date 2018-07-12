@@ -1,0 +1,11 @@
+default button player 1
+Move down:	Button 5 (= X-Button)
+Move up:	Button 1 (= B-Button)
+Attack 1:	Button 2 (= A-Button)
+Start:		Button 4 (= Y-Button)
+
+So Attack 1 and Start can be used to confirm settings.
+Move Up and Down is for selection.
+
+This is a minimal working joypad config to easy setup a connected controller
+Hope it will be usefull!
