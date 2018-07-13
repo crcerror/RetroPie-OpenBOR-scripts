@@ -1,3 +1,6 @@
+# Sliced.bor.cfg
+## Minimal Setup for joypad to get access to menus and set them right
+
 default button player 1
 Move down:	Button 5 (= X-Button)
 Move up:	Button 1 (= B-Button)
