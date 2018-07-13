@@ -21,10 +21,11 @@
 # For https://retropie.org.uk/
 
 ###### --------------------- INIT ---------------------
-readonly VERSION="1.01_071018"
+readonly VERSION="1.10_071318"
 readonly TITLE="OpenBOR - cyperghosts Episode selector"
-readonly BORBASE_DIR="/home/pi/RetroPie/roms/ports/openbor"
 readonly ROOTDIR="/opt/retropie"
+readonly BORBASE_DIR="/home/pi/RetroPie/roms/ports/openbor"
+readonly MASTERCONF_DIR="/home/pi/RetroPie/roms/ports/openbor"
 readonly KEYCONF_DIR="$ROOTDIR/configs/ports/openbor/Saves"
 ###### --------------------- INIT ---------------------
 
@@ -167,9 +168,9 @@ fi
 # master file is names master.bor.cfg
 # I use a good configuration file from a older setup to copy key settings for new games ;)
 BOR_cfg="$KEYCONF_DIR${BOR_file#.*}.cfg"
-if [[ ! -f $BOR_cfg && -f $BORBASE_DIR/master.bor.cfg  ]]; then
-    cp "$BORBASE_DIR/master.bor.cfg" "$BOR_cfg"
-    show_msg "Copied config-file from:\n$BORBASE_DIR/master.bor.cfg\n    to:\n$BOR_cfg\n\nStarting game \"${BOR_file:2:-4}\" in a few seconds!" "8" " Setup controller! "
+if [[ ! -f $BOR_cfg && -f $MASTERCONF_DIR/master.bor.cfg  ]]; then
+    cp "$MASTERCONF_DIR/master.bor.cfg" "$BOR_cfg"
+    show_msg "Copied config-file from:\n$MASTERCONF_DIR/master.bor.cfg\n    to:\n$BOR_cfg\n\nStarting game \"${BOR_file:2:-4}\" in a few seconds!" "8" " Setup controller! "
 fi
 
 # Finally using RUNCOMMAND.SH to initiate prober start of games
