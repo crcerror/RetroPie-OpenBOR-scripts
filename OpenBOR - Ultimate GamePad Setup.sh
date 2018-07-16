@@ -4,10 +4,6 @@
 # It offers much more configuration possibilities with dynamic setup
 #
 # How to:     This automate setup of joypad for each game
-#             Sliced config? This is a heavily reduced version of a joypad setup
-#             only Buttons are setted to navigate through OpenBOR menu and to save joypad settings
-#             After that I recommend to build a master file out of this ready setted config....
-#
 # Place file to /opt/retropie/configs/all/runcommand-menu
 # Access with USER Menu in runcommand.... Press just a button during greybox is visible
 #
@@ -17,8 +13,7 @@
 ###### --------------------- INIT ---------------------
 readonly MASTERCONF_DIR="/home/pi/RetroPie/roms/ports/openbor"
 readonly KEYCONF_DIR="/opt/retropie/configs/ports/openbor/Saves"
-readonly MASTER_GITHUB="http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/master.bor.cfg"
-readonly SLICED_GITHUB="http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/sliced.bor.cfg"
+readonly JOYPAD_GITHUB="http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/joypadlist.txt"
 ######
 readonly BACKTITLE=" cyperghosts OpenBOR easy Joypad config "
 ###### --------------------- INIT ---------------------
@@ -35,6 +30,8 @@ function show_info() {
     dialog --title "$3" --backtitle "$BACKTITLE"  --infobox "$1" 0 0
     sleep "$2"; clear
 }
+
+# Show OK-Box // $1 = Textmessage, $2 = Boxtitlemessage
 
 function show_msg() {
     dialog --title "$2" --backtitle "$BACKTITLE"  --msgbox "$1" 0 0
@@ -56,23 +53,50 @@ function show_yesno() {
 function get_file() {
 
     local git_address="$1"
+    local git_filename="$(basename "$git_address")"
     local cfg_location="$2"
     local filename="$3"
-    local check_git=$(wget --spider "$git_address" 2>&1 | grep -c "404 Not Found")
-    
-    [[ ! -d "$cfg_location" ]] && show_msg "Directory not found!\n\n$cfg_location\n\nPlease correct settings!" " Error! Missing directory! " && exit 0
+    local array
+    local cmd
+    local check_connection=$(wget --spider "$git_address" 2>&1 | grep -c "404 Not Found")
 
-    if [[ $check_git -gt 0 ]]; then 
+    [[ ! -d "$cfg_location" ]] && show_msg "Directory not found!\n\n$cfg_location\n\nPlease correct settings!" " Error! Missing directory! " && exit 0
+    [[ ! -s "$cfg_location/$git_filename" && $check_connection -gt 0 ]] && show_msg "Sourcefile not found! I was unable to locate \"joypadlist.txt\" in \"$cfg_location\" nor I could download it from $git_address" " Error! Missing files! " && return
+
+    if [[ -s "$cfg_location/$git_filename" ]]; then
+        show_yesno "The file $git_filename is already available.\n\nCan I overwrite it?" " Old $git_filename found! "
+        [[ $? == 0 ]] && wget -q "$git_address" -O "$cfg_location/$git_filename"
+    fi
+    
+    while read -r; do
+        array+=("$REPLY")
+    done < "$cfg_location/$git_filename"
+
+    # This snippet repairs wrong setted arrays!
+    [[ $((${#array[@]}%2)) != 0 ]] && unset array[${#array[@]}-1]
+
+    cmd=(dialog --backtitle "$BACKTITLE" \
+                --title " Setup OpenBOR - Download ready setted JoyPad files "
+                --ok-label " Select " \
+                --cancel-label " Return " \
+                --no-tags --stdout \
+                --menu "OpenBOR Addon: \"${BOR_file:0:-4}\"\n\nConfig files will be downloaded and named to:\n$cfg_location/$filename" 16 70 8)
+    git_address=$("${cmd[@]}" "${array[@]}")
+    [[ $? == 1 ]] && return
+
+    check_connection=$(wget --spider "$git_address" 2>&1 | grep -c "404 Not Found")
+
+    if [[ $check_connection -gt 0 ]]; then
         show_msg "Server reported: 404 Not Found\nFailed to download config file from:\n\n$git_address\n\nSorry for that...." " Error: Setup config file! "
         return
     elif [[ -s "$cfg_location/$filename" && "$filename" == "master.bor.cfg" ]]; then
         show_yesno "Master config file is already setted!\nDo you want to override?" " Master file setted! "
         [[ $? == 1 ]] && return
-    elif [[ -s "$cfg_location/$filename" ]]; then 
+    elif [[ -s "$cfg_location/$filename" ]]; then
         show_yesno "Game config file is already setted!\nDo you want to override?" " Game file setted! "
         [[ $? == 1 ]] && return
     else
-        show_yesno "Config files are wrong setted!\nThey seem to be zerofiles\n\nDo you want to override?" " Error: Config files! "
+        show_yesno "Config files are wrong setted!\nThey seem to be not available or are zerofiles\n\nDo you want to proceed with setup?" " Error: Config files! "
         [[ $? == 1 ]] && return
     fi
 
@@ -81,7 +105,7 @@ function get_file() {
     if [[ -s "$cfg_location/$filename" && "$filename" == "master.bor.cfg" ]]; then
          show_msg "Master file successfully downloaded! Setted file to:\n\n$cfg_location/$filename" " Congrats! Master file setted! "
     elif [[ -s "$cfg_location/$filename" ]]; then
-        show_msg "Config file successfully downloaded! Setted file to:\n\n$BOR_cfg\n\nThis offers minimal joypad setup:\nMove down: Button 5 (= X-Button)    Move up: Button 1 (= B-Button)\nAttack 1: Button 2 (= A-Button)     Start: Button 4 (= Y-Button)" " Congrats! Config file setted! "
+        show_msg "Config file successfully downloaded! Setted file to:\n\n$BOR_cfg" " Congrats! Config file setted! "
     else
         show_msg "Failed to download any config file from:\n\n$git_address\n\nOr file contains zerofiles\n\nSorry for that...." " Error: Setup config file! "
     fi
@@ -124,15 +148,15 @@ function remove_items() {
         array=("0" "Start OpenBOR gaming engine" \
                "1" "Master config --> Game config" \
                "2" "Game config --> Master config" \
-               "3" "Github master.bor.cfg --> Master config" \
-               "4" "Github sliced.bor.cfg --> Game config" \
+               "3" "Github Controller list --> Master config" \
+               "4" "Github Controller list --> Game config" \
                "5" "Remove current Game configuration" \
                "6" "Remove current Master configuration" \
                "7" "Exit to runcommand")
 
     # 3.Check config files and enable/disable array textes
-        [[ ! -f $BOR_cfg && -f $MASTERCONF_DIR/master.bor.cfg ]] && remove_items 0 2 5
-        [[ ! -f $MASTERCONF_DIR/master.bor.cfg && -f $BOR_cfg ]] && remove_items 1 6
+        [[ ! -f $BOR_cfg && -f $MASTERCONF_DIR/master.bor.cfg ]] && remove_items 0 2 3 5
+        [[ ! -f $MASTERCONF_DIR/master.bor.cfg && -f $BOR_cfg ]] && remove_items 1 4 6
         [[ ! -f $MASTERCONF_DIR/master.bor.cfg && ! -f $BOR_cfg  ]] && remove_items 0 1 2 5 6
         [[ -f $MASTERCONF_DIR/master.bor.cfg && -f $BOR_cfg  ]] && remove_items 3 4
 
@@ -160,11 +184,11 @@ function remove_items() {
                 ;;
 
                 3) # Download Master config from github
-                   get_file "$MASTER_GITHUB" "$MASTERCONF_DIR" "master.bor.cfg"
+                   get_file "$JOYPAD_GITHUB" "$MASTERCONF_DIR" "master.bor.cfg"
                 ;;
 
-                4) # Download rudimentary Game config from github
-                   get_file "$SLICED_GITHUB" "$KEYCONF_DIR" "$BOR_file.cfg"
+                4) # Download Game config from github
+                   get_file "$JOYPAD_GITHUB" "$KEYCONF_DIR" "$BOR_file.cfg"
                 ;;
 
                 5) # Delete current Game config
@@ -186,4 +210,4 @@ function remove_items() {
                 ;;
             esac
 
-    done
+done
