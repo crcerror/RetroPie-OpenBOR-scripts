@@ -3,7 +3,6 @@
 # This version is a massive rewrite of older version.
 # It offers much more configuration possibilities with dynamic setup
 #
-# How to:     This automate setup of joypad for each game
 # Place file to /opt/retropie/configs/all/runcommand-menu
 # Access with USER Menu in runcommand.... Press just a button during greybox is visible
 #
@@ -61,13 +60,18 @@ function get_file() {
     local check_connection=$(wget --spider "$git_address" 2>&1 | grep -c "404 Not Found")
 
     [[ ! -d "$cfg_location" ]] && show_msg "Directory not found!\n\n$cfg_location\n\nPlease correct settings!" " Error! Missing directory! " && exit 0
-    [[ ! -s "$cfg_location/$git_filename" && $check_connection -gt 0 ]] && show_msg "Sourcefile not found! I was unable to locate \"joypadlist.txt\" in \"$cfg_location\" nor I could download it from $git_address" " Error! Missing files! " && return
+    [[ ! -s "$cfg_location/$git_filename" && $check_connection -gt 0 ]] && show_msg "Sourcefile not found! I was unable to locate \"$git_filename\" in \"$cfg_location\" nor I could download it from $git_address" " Error! Missing files! " && return
 
     if [[ -s "$cfg_location/$git_filename" ]]; then
         show_yesno "The file $git_filename is already available.\n\nCan I overwrite it?" " Old $git_filename found! "
-        [[ $? == 0 ]] && wget -q "$git_address" -O "$cfg_location/$git_filename"
+        [[ $? == 1 ]] && return
+    elif [[ $check_connection -gt 0 ]]; then
+        show_info "There are server issues!\n\nReturning now....." "4" " Error: Server issues! "
+        return
     fi
     
+    wget -q "$git_address" -O "$cfg_location/$git_filename"
+
     while read -r; do
         array+=("$REPLY")
     done < "$cfg_location/$git_filename"
