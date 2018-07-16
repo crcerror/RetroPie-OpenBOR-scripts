@@ -1,0 +1,2 @@
+http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/sliced.bor.cfg
+Emergency setting only Buttons X and B move Y and A select
