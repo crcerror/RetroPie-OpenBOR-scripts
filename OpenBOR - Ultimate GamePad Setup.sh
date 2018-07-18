@@ -159,10 +159,10 @@ function remove_items() {
                "7" "Exit to runcommand")
 
     # 3.Check config files and enable/disable array textes
-        [[ ! -f $BOR_cfg && -f $MASTERCONF_DIR/master.bor.cfg ]] && remove_items 0 2 3 5
-        [[ ! -f $MASTERCONF_DIR/master.bor.cfg && -f $BOR_cfg ]] && remove_items 1 4 6
-        [[ ! -f $MASTERCONF_DIR/master.bor.cfg && ! -f $BOR_cfg  ]] && remove_items 0 1 2 5 6
-        [[ -f $MASTERCONF_DIR/master.bor.cfg && -f $BOR_cfg  ]] && remove_items 3 4
+        [[ ! -s $BOR_cfg && -s $MASTERCONF_DIR/master.bor.cfg ]] && remove_items 0 2 3 5
+        [[ ! -s $MASTERCONF_DIR/master.bor.cfg && -s $BOR_cfg ]] && remove_items 1 4 6
+        [[ ! -s $MASTERCONF_DIR/master.bor.cfg && ! -s $BOR_cfg  ]] && remove_items 0 1 2 5 6
+        [[ -s $MASTERCONF_DIR/master.bor.cfg && -s $BOR_cfg  ]] && remove_items 3 4
 
         cmd=(dialog --backtitle "$BACKTITLE" \
                     --title " Setup OpenBOR - Beats of Rage Engine "
