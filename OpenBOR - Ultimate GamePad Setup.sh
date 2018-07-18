@@ -59,19 +59,22 @@ function get_file() {
     local cmd
     local check_connection=$(wget --spider "$git_address" 2>&1 | grep -c "404 Not Found")
 
-    [[ ! -d "$cfg_location" ]] && show_msg "Directory not found!\n\n$cfg_location\n\nPlease correct settings!" " Error! Missing directory! " && exit 0
-    [[ ! -s "$cfg_location/$git_filename" && $check_connection -gt 0 ]] && show_msg "Sourcefile not found! I was unable to locate \"$git_filename\" in \"$cfg_location\" nor I could download it from $git_address" " Error! Missing files! " && return
-
-    if [[ -s "$cfg_location/$git_filename" ]]; then
+    if [[ ! -d "$cfg_location" ]]; then
+        show_info "Directory not found!\n\n$cfg_location\n\nPlease correct settings!\n\nReturn to runcommand in 10 seconds!" "10" " Error! Missing directory! "
+        exit 1
+    elif [[ ! -s "$cfg_location/$git_filename" && $check_connection -gt 0 ]]; then
+        show_msg "Sourcefile not found! I was unable to locate \"$git_filename\" in \"$cfg_location\" nor I could download it from $git_address" " Error! Missing files! " 
+        return
+    elif [[ -s "$cfg_location/$git_filename" ]]; then
         show_yesno "The file $git_filename is already available.\n\nCan I overwrite it?" " Old $git_filename found! "
-        [[ $? == 1 ]] && return
+        [[ $? == 0 ]] && wget -q "$git_address" -O "$cfg_location/$git_filename"
     elif [[ $check_connection -gt 0 ]]; then
         show_info "There are server issues!\n\nReturning now....." "4" " Error: Server issues! "
         return
+    else
+        wget -q "$git_address" -O "$cfg_location/$git_filename"
     fi
     
-    wget -q "$git_address" -O "$cfg_location/$git_filename"
-
     while read -r; do
         array+=("$REPLY")
     done < "$cfg_location/$git_filename"
@@ -98,9 +101,6 @@ function get_file() {
         [[ $? == 1 ]] && return
     elif [[ -s "$cfg_location/$filename" ]]; then
         show_yesno "Game config file is already setted!\nDo you want to override?" " Game file setted! "
-        [[ $? == 1 ]] && return
-    else
-        show_yesno "Config files are wrong setted!\nThey seem to be not available or are zerofiles\n\nDo you want to proceed with setup?" " Error: Config files! "
         [[ $? == 1 ]] && return
     fi
 
