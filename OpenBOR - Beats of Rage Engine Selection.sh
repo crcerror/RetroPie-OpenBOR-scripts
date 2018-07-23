@@ -12,21 +12,20 @@
 # Reason 1: To make use of runcommand.sh for better compatibility to RetroPie setups
 # Reason 2: To automate setup of joypad for each game
 #             > copy a cfg file to $BORBASE_DIR and name it master.bor.cfg
+# Reason 3: Seemless integration into JoyPad configuration tool
+#
 #             > so a once done setup file must be copied from $KEYCONF_DIR to $BORBASE_DIR
-#
-# For setup: please edit nano /opt/retropie/configs/ports/openbor/emulators.cfg
-#            and add a %ROM% after OpenBOR binary call
-#
 # coded by cyperghost
 # For https://retropie.org.uk/
 
 ###### --------------------- INIT ---------------------
-readonly VERSION="1.10_071318"
-readonly TITLE="OpenBOR - cyperghosts Episode selector"
+readonly VERSION="1.33_072318"
+readonly TITLE="OpenBOR - cyperghosts BOR'n'more selector"
 readonly ROOTDIR="/opt/retropie"
 readonly BORBASE_DIR="/home/pi/RetroPie/roms/ports/openbor"
 readonly MASTERCONF_DIR="/home/pi/RetroPie/roms/ports/openbor"
 readonly KEYCONF_DIR="$ROOTDIR/configs/ports/openbor/Saves"
+readonly JOYPAD_SCRIPT="/opt/retropie/configs/all/runcommand-menu/OpenBOR - Ultimate GamePad Setup.sh"
 ###### --------------------- INIT ---------------------
 
 
@@ -69,6 +68,12 @@ function show_msg() {
     sleep "$2"; clear
 }
 
+# Show yesnobox // $1 = Textmessage, $2 = Boxtitlemessage
+
+function show_yesno() {
+dialog --title "$2" --backtitle " $TITLE - $VERSION " --yesno "$1" 0 0
+}
+
 # This builds dialog for OpenBOR directories
 # We need to create valid array (dialog_array) before
 # I disabled tags, so selections are showen exactly as in ES ROM section
@@ -76,8 +81,8 @@ function show_msg() {
 function dialog_selectBOR() {
 
     # Create array for dialog
-    local dialog_array
-    local i
+    local dialog_array; local i
+    local cmd; local choices; local status
     for i in "${array[@]}"; do
         dialog_array+=("$i" "${i:2:-4}")
     done
@@ -86,14 +91,17 @@ function dialog_selectBOR() {
     unset array
 
     # -- Begin Dialog
-    local cmd=(dialog --backtitle " $TITLE - $VERSION " \
-                      --title " Select your Beats of Rage Episode " \
-                      --ok-label " Select " \
-                      --cancel-label " Exit to ES " \
-                      --no-tags --stdout \
-                      --menu "There are $((${#dialog_array[@]}/2)) games available\nWhich you want to play:" 16 70 16)
-    local choices=$("${cmd[@]}" "${dialog_array[@]}")
-    echo "$choices"
+
+    cmd=(dialog --backtitle " $TITLE - $VERSION " \
+                --title " Select your Beats of Rage Episode " \
+                --ok-label " Select " \
+                --cancel-label " Exit to ES " \
+                --extra-button --extra-label " JoyPad Config "
+                --no-tags --stdout \
+                --menu "There are $((${#dialog_array[@]}/2)) games available\nWhich you want to play:" 16 70 16)
+    choices=$("${cmd[@]}" "${dialog_array[@]}")
+    echo "$?----$choices"
+
     # -- End Dialog
 }
 
@@ -153,27 +161,51 @@ fi
 # Start Selection Dialog
 
 start_joy
-build_find_array "$bor_files"
-BOR_file=$("dialog_selectBOR")
-clear
+
+while true; do
+
+    build_find_array "$bor_files"
+    BOR_file=$("dialog_selectBOR")
+    clear
+
+        case "${BOR_file%%----*}" in
+            0)  # Select Button
+                BOR_cfg="$KEYCONF_DIR${BOR_file#*.}.cfg"
+                if [[ ! -f $BOR_cfg && -f $MASTERCONF_DIR/master.bor.cfg  ]]; then
+                    cp "$MASTERCONF_DIR/master.bor.cfg" "$BOR_cfg"
+                    show_msg "Copied config-file from:\n$MASTERCONF_DIR/master.bor.cfg\n    to:\n$BOR_cfg\n\nStarting game \"${BOR_file:7:-4}\" in a few seconds!" "8" " Setup controller! "
+                    break
+                elif [[ ! -f $BOR_cfg && ! -f $MASTERCONF_DIR/master.bor.cfg  ]]; then
+                    show_yesno "Game \"${BOR_file:7:-4}\" is unconfigurated!\n\nPlease setup JoyPads before going to BRAWL\n\nSelect NO if you want to start an unconfigurated game....\nRemember to configurate your inputs in OpenBOR! This selection box will only appear on first startup!" " Setup controller! "
+                    [[ $? == 1 ]] && break
+                else
+                    break
+                fi
+            ;;
+
+            1) # Cancel Button
+               end_joy
+               show_msg "No Selection made...Returning to ES!" "2" " Really? :( "
+               exit
+            ;;
+
+            3) # JoyPad Selection
+                if [[ -s $JOYPAD_SCRIPT ]]; then
+                    bash "$JOYPAD_SCRIPT" "openbor" "configscript" "$BORBASE_DIR${BOR_file#*.}"
+                else
+                    show_msg "JoyPad configuration script not found in:\n\n$JOYPAD_SCRIPT" "5" " Error: Script missing! "
+                fi
+            ;;
+        esac
+
+done
+
+# End Selection Dialog
+
+
 end_joy; sleep 0.5
-
-if [[ -z $BOR_file ]]; then
-    show_msg "No Selection made...Returning to ES!" "2" " Really? :( "
-    exit
-fi
-
-# Is there a config file (I don't want to setup each file one by one)
-# If not I use the Masterfile which I copied to $BORBASE_DIR
-# master file is names master.bor.cfg
-# I use a good configuration file from a older setup to copy key settings for new games ;)
-BOR_cfg="$KEYCONF_DIR${BOR_file#.*}.cfg"
-if [[ ! -f $BOR_cfg && -f $MASTERCONF_DIR/master.bor.cfg  ]]; then
-    cp "$MASTERCONF_DIR/master.bor.cfg" "$BOR_cfg"
-    show_msg "Copied config-file from:\n$MASTERCONF_DIR/master.bor.cfg\n    to:\n$BOR_cfg\n\nStarting game \"${BOR_file:2:-4}\" in a few seconds!" "8" " Setup controller! "
-fi
 
 # Finally using RUNCOMMAND.SH to initiate prober start of games
 
-BOR_file="$BORBASE_DIR${BOR_file#.*}"
+BOR_file="$BORBASE_DIR${BOR_file#*.}"
 "$ROOTDIR/supplementary/runcommand/runcommand.sh" 0 _PORT_ "openbor" "$BOR_file"
