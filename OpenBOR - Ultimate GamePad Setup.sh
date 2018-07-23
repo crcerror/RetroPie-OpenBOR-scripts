@@ -20,6 +20,7 @@ readonly BACKTITLE=" cyperghosts OpenBOR easy Joypad config "
 BOR_file="$(basename "$3")"
 emulator="${1,,}"
 BOR_cfg="$KEYCONF_DIR/$BOR_file.cfg"
+config_key="${2,,}"
 
 ###### --------------- Dialog Functions ---------------
 
@@ -74,7 +75,7 @@ function get_file() {
     else
         wget -q "$git_address" -O "$cfg_location/$git_filename"
     fi
-    
+
     while read -r; do
         array+=("$REPLY")
     done < "$cfg_location/$git_filename"
@@ -163,6 +164,7 @@ function remove_items() {
         [[ ! -s $MASTERCONF_DIR/master.bor.cfg && -s $BOR_cfg ]] && remove_items 1 4 6
         [[ ! -s $MASTERCONF_DIR/master.bor.cfg && ! -s $BOR_cfg  ]] && remove_items 0 1 2 5 6
         [[ -s $MASTERCONF_DIR/master.bor.cfg && -s $BOR_cfg  ]] && remove_items 3 4
+        [[ -s $BOR_cfg && $config_key == "configscript" ]] && remove_items 0
 
         cmd=(dialog --backtitle "$BACKTITLE" \
                     --title " Setup OpenBOR - Beats of Rage Engine "
