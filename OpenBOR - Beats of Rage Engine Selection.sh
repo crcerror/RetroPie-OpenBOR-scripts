@@ -1,25 +1,23 @@
 #!/bin/bash
-# Graphical Menu to select OpenBOR custom files
+# Graphical Menu to select OpenBOR modules
 # Thank to @darknior for working on OpenBOR on RetroPie forum
 # Follow him @chronocrash official forum
 # For setup read more here
-# https://retropie.org.uk/forum/topic/13784
+# https://retropie.org.uk/forum/topic/18565
 #
 # I'm using @darkniors file nameing convention so every game episode uses
-# gameepisode.bor/data directory structure
+# gameepisode.bor/data directory structure, extract PAK with suitable tool
 #
 # The purposes?
 # Reason 1: To make use of runcommand.sh for better compatibility to RetroPie setups
 # Reason 2: To automate setup of joypad for each game
-#             > copy a cfg file to $BORBASE_DIR and name it master.bor.cfg
 # Reason 3: Seemless integration into JoyPad configuration tool
 #
-#             > so a once done setup file must be copied from $KEYCONF_DIR to $BORBASE_DIR
 # coded by cyperghost
 # For https://retropie.org.uk/
 
 ###### --------------------- INIT ---------------------
-readonly VERSION="1.33_072318"
+readonly VERSION="1.40_072518"
 readonly TITLE="OpenBOR - cyperghosts BOR'n'more selector"
 readonly ROOTDIR="/opt/retropie"
 readonly BORBASE_DIR="/home/pi/RetroPie/roms/ports/openbor"
@@ -82,7 +80,7 @@ function dialog_selectBOR() {
 
     # Create array for dialog
     local dialog_array; local i
-    local cmd; local choices; local status
+    local cmd; local choices
     for i in "${array[@]}"; do
         dialog_array+=("$i" "${i:2:-4}")
     done
@@ -93,6 +91,7 @@ function dialog_selectBOR() {
     # -- Begin Dialog
 
     cmd=(dialog --backtitle " $TITLE - $VERSION " \
+                --default-item "${BOR_file#*----}" \
                 --title " Select your Beats of Rage Episode " \
                 --ok-label " Select " \
                 --cancel-label " Exit to ES " \
@@ -141,20 +140,15 @@ function build_find_array() {
 
 ###### -------------- M A I N B U I L D --------------
 
-# Get OpenBOR-directories and build valid array, make precheck
+# Get OpenBOR-directories, make precheck if some games available, build valid array, 
 
 if [[ -d $BORBASE_DIR ]]; then
     cd "$BORBASE_DIR"
     bor_files=$(find -maxdepth 1 -iname "*.bor" -type d | sort 2>/dev/null)
+    [[ -z $bor_files ]] && show_msg "No BOR-game found in location:\n\n$BORBASE_DIR" "3" " Error! " && exit
+    build_find_array "$bor_files"
 else
     show_msg "No $BORBASE_DIR found!" "3" " Fatal error! "
-    exit
-fi
-
-# Are there any BOR Directories available?
-
-if [[ -z $bor_files ]]; then
-    show_msg "No BOR directories found in location:\n\n$BORBASE_DIR" "3" " Error! "
     exit
 fi
 
@@ -164,7 +158,6 @@ start_joy
 
 while true; do
 
-    build_find_array "$bor_files"
     BOR_file=$("dialog_selectBOR")
     clear
 
@@ -174,13 +167,11 @@ while true; do
                 if [[ ! -f $BOR_cfg && -f $MASTERCONF_DIR/master.bor.cfg  ]]; then
                     cp "$MASTERCONF_DIR/master.bor.cfg" "$BOR_cfg"
                     show_msg "Copied config-file from:\n$MASTERCONF_DIR/master.bor.cfg\n    to:\n$BOR_cfg\n\nStarting game \"${BOR_file:7:-4}\" in a few seconds!" "8" " Setup controller! "
-                    break
                 elif [[ ! -f $BOR_cfg && ! -f $MASTERCONF_DIR/master.bor.cfg  ]]; then
                     show_yesno "Game \"${BOR_file:7:-4}\" is unconfigurated!\n\nPlease setup JoyPads before going to BRAWL\n\nSelect NO if you want to start an unconfigurated game....\nRemember to configurate your inputs in OpenBOR! This selection box will only appear on first startup!" " Setup controller! "
-                    [[ $? == 1 ]] && break
-                else
-                    break
+                    [[ $? == 0 ]] && continue
                 fi
+                break
             ;;
 
             1) # Cancel Button
@@ -202,10 +193,9 @@ done
 
 # End Selection Dialog
 
-
 end_joy; sleep 0.5
 
-# Finally using RUNCOMMAND.SH to initiate prober start of games
+# Finally using RUNCOMMAND.SH to initiate proper start of selected game
 
 BOR_file="$BORBASE_DIR${BOR_file#*.}"
 "$ROOTDIR/supplementary/runcommand/runcommand.sh" 0 _PORT_ "openbor" "$BOR_file"
