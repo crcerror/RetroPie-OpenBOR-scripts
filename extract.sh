@@ -1,8 +1,11 @@
 #!/bin/bash
-# PAK EXTRACT v0.65
+# PAK EXTRACT v0.67
+#
 # by cyperghost for retropie.org.uk
 # 1. PLACE  BARE PAK FILES to /home/pi/RetroPie/roms/ports/openbor/pak
 # 2. RUN THE SCRIPT (with user pi!)
+# 3. Data will be extracted to ./openbor/gamename.bor/data
+# 4. pak files will be backuped from gamename.pak to gamename.pak.original
 # Change pathes as you like!
 
 EXTRACT_BOREXE="/opt/retropie/ports/openbor/borpak"
@@ -34,9 +37,13 @@ if [[ -f $EXTRACT_BOREXE ]]; then
         
     done
 
+    echo "Extraction done without errors!"
+
 else
 
     echo "borpak executive file not found in $EXTRACT_BOREXE"
     echo "Exit now...."
 
 fi
+
+sleep 5
