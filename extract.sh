@@ -25,7 +25,7 @@ if [[ -f $EXTRACT_BOREXE ]]; then
         mkdir -p "$BORROM_DIR/$FILE.bor"
         echo "Extracting file: $i"
         echo "to dir: $BORROM_DIR/$FILE.bor"
-        sleep 5
+        sleep 3
         "$EXTRACT_BOREXE" -d "$BORROM_DIR/$FILE.bor" "$i"
         echo "-------- Done Extracting: $i ---------"
         echo "-- Backup $i >> $i.original --"
@@ -38,6 +38,5 @@ else
 
     echo "borpak executive file not found in $EXTRACT_BOREXE"
     echo "Exit now...."
-    exit
 
 fi
