@@ -108,8 +108,13 @@ You can download your `.pak` files and extract them with Windows Toolsset - it i
 
 ## Linux method
 
-( ...... )needs to be updated
+I did a complete rewrite of the extraction script. The original was awful to use and failed on FAT32 and NTFS devices (because of file access rights!)
+[So here it is... The extraction script for RetroPie! Please report errors and issues!](https://github.com/crcerror/RetroPie-OpenBOR-scripts/blob/master/extract.sh)
 
+1. Place your bare PAK files to `/home/pi/RetroPie/roms/ports/openbor/pak`
+2. Run the script from any place with user **PI** (recommended to avoid file access issues)
+3. The script extracts all pak-files (even with mixed characters) to openbor directory. Extracted data will be stored to `./openbor/gamename.bor/data`
+4. The script backups the old PAK files automatically gamename.pak will be gamename.pak.original
 
 # Part 5: Start Game
 
