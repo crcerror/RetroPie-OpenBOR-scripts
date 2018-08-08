@@ -3,9 +3,9 @@ Emergency setting only Buttons X and B move Y and A select
 http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/Snakebyte idroid-con (cyperghost).bor.cfg
 Snakebyte idroid:con controller (cyperghost)
 http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/BiZzAr721-PS3.cfg
-PS3 Controller (BiZzAr721)
+PS3 Controller genuine wired connection (BiZzAr721)
 http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/BiZzAr721-PS3 BT.cfg
-PS3 Bluetooth Controller (BiZzAr721)
+PS3 Controller genuine bluetooth connection (BiZzAr721)
 http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/BiZzAr721-Xbox 360 WL.cfg
 XBOX360 Wireless Controller (BiZzAr721)
 http://raw.githubusercontent.com/crcerror/RetroPie-OpenBOR-scripts/master/joypad/BiZzAr721-SNES Clone (tata).cfg
