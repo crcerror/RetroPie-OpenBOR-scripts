@@ -1,6 +1,6 @@
-## Binary Archive
+# Binary Archive
 
-# OpenBOR_galina
+## OpenBOR_galina
 * this is OpenBOR 6315, official branch
 * this file was compiled on Raspberry 3, Raspian Jessie
 * It supports CLI for module files
@@ -9,9 +9,9 @@
 * It supports varoius of newest modules
 * Please recompile for other plattforms....
 
-## UNOFFICIAL binaries!
+# UNOFFICIAL binaries!
 
-# OpenBOR:
+## OpenBOR:
 * this OpenBOR SVN 3xxx branch
 * this file was compiled on Raspberry 3, Raspian Jessie
 * It supports CLI for module files
